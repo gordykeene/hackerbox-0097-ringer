@@ -31,30 +31,36 @@ render_options = ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Le
 view = "Leafs (for print)"; // ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver"]
 
 /* [LED Ring Measurements] */
-// Width of the LED ring along x/y-plane (outer - inner diameters)
+// Width of the LED ring, x/y-plane (outer-inner diameter)
 ring_width = 9;
-// Additional space added inside the ring along x/y-plane
+// Gap between LED ring and leaf, x/y-plane
 ring_inner_offset = 2;
-// Height of the LED ring along z-axis
+// Height of the LED ring, z-axis
 ring_height = 1.6;
 
 /* [Cable Raceway Measurements] */
-// Height of the horizontal cable raceway along z-axis
+// Horizontal cable raceway height, z-axis
 cable_raceway_height = 2;
-// Width of the horizontal cable raceway along x-axis
+// Width of the horizontal cable raceway, x-axis
 cable_raceway_width = 20;
-// Radius of the vertical cable raceway (minimum)
+// Min vertical raceway radius, x/y-plane
 cable_raceway_radius = 3;
 
 /* [Pine Tree Settings] */
 // Minimum radius of the trunk
 minimum_trunk_radius = 2;
+// Minimum wall thickness
+minimum_wall_thickness = 1.2;
+// Overlap between each trunk layer
+trunk_layer_overlap = 1.6;
 
 /* [Tweaks and adjustments] */
 $fa = 8.0;
 $fs = 0.25;
-// extra space to add to the outside of the object when used as a void.
+// Added to objects when used as a void
 slop = 0.01;
+// Nozzle diameter
+nozzle_diameter = 0.4;
 
 // This is a hack to ensure the Customizer ignores the rest of the values in this file.
 module end_customizer() {}
@@ -66,7 +72,7 @@ module end_customizer() {}
 ring_radii = [60, 60, 48, 36, 24, 13.5, minimum_trunk_radius];
 
 // Calulated values
-leaf_outer_edge_height = cable_raceway_height + 0.4;
+leaf_outer_edge_height = cable_raceway_height + nozzle_diameter;
 
 // Colors
 color_leafs = "Green";
@@ -114,17 +120,20 @@ module leafs_for_print() {
 
 module trunk_for_print() {
   trunk_at(0);
-  translate([0, 0, leaf_layer_height(0)]) {
+  translate([0, 0, calc_layer_h_at(0)]) {
     trunk_at(1);
-    translate([0, 0, leaf_layer_height(1)]) {
+    translate([0, 0, calc_layer_h_at(1)]) {
       trunk_at(2);
-      translate([0, 0, leaf_layer_height(2)]) {
+      translate([0, 0, calc_layer_h_at(2)]) {
         trunk_at(3);
-        translate([0, 0, leaf_layer_height(3)]) {
+        translate([0, 0, calc_layer_h_at(3)]) {
           trunk_at(4);
-          translate([0, 0, leaf_layer_height(4)]) {
+          /*
+          Printing the top layer never works out well, guess I'll just glue it on
+          translate([0, 0, calc_layer_h_at(4)]) {
             trunk_at(5);
           }
+          */
         }
       }
     }
@@ -133,15 +142,15 @@ module trunk_for_print() {
 
 module leafs_stacked() {
   leaf_at(0);
-  translate([0, 0, leaf_layer_height(0)]) {
+  translate([0, 0, calc_layer_h_at(0)]) {
     leaf_at(1);
-    translate([0, 0, leaf_layer_height(1)]) {
+    translate([0, 0, calc_layer_h_at(1)]) {
       leaf_at(2);
-      translate([0, 0, leaf_layer_height(2)]) {
+      translate([0, 0, calc_layer_h_at(2)]) {
         leaf_at(3);
-        translate([0, 0, leaf_layer_height(3)]) {
+        translate([0, 0, calc_layer_h_at(3)]) {
           leaf_at(4);
-          translate([0, 0, leaf_layer_height(4)]) {
+          translate([0, 0, calc_layer_h_at(4)]) {
             leaf_at(5);
           }
         }
@@ -155,12 +164,12 @@ module leafs_and_trunk_quartered() {
   intersection() {
     color("gray", alpha=0.05)
       translate([-k, -k, -slop]) 
-        cube([k, k, 2 * k]);
+        cube([k + 1, k + 1, 2 * k]);
     leafs_stacked();
   }
   intersection() {
     color("gray", alpha=0.05)
-      translate([-k, 0, -slop])
+      translate([-k -1, -1, -slop])
         cube([k, k, 2 * k]);
     trunk_for_print();
   }
@@ -183,40 +192,41 @@ module leafs_and_trunk_sliver() {
 // ===== LEAF RINGS ===== //
 
 module leaf_at(layer_index) {
-  layer_h = leaf_layer_height(layer_index);
-  outer_r = ring_radii[layer_index];
-  inner_r = ring_radii[layer_index + 1];
-  echo("leaf. layer_h: ", layer_h, "inner_r: ", inner_r, ", outer_r: ", outer_r);
+  layer_h = calc_layer_h_at(layer_index);
+  lower_r = calc_outer_r_at(layer_index);
+  upper_r = calc_outer_r_at(layer_index + 1);
+  net_upper_r = calc_net_upper_r_at(layer_index);
+  r_diff = calc_r_diff_at(layer_index);
+  lower_trunk_r = calc_net_inner_r_at(layer_index);
 
-  net_inner_r = max(1.2 + minimum_trunk_radius, inner_r - ring_width - ring_inner_offset);
-  trunk_r = net_inner_r / 2;
-  r_diff = outer_r - net_inner_r;
-  echo("leaf. net_inner_r: ", net_inner_r, ", r_diff: ", r_diff);
+  echo("leaf. layer_h: ", layer_h, "upper_r: ", upper_r, ", lower_r: ", lower_r);
+  echo("leaf. net_upper_r: ", net_upper_r, ", r_diff: ", r_diff);
 
   difference() 
   {
     color(color_leafs) union() {
-      cylinder(h = layer_h, r = net_inner_r);
-      cylinder(h = leaf_outer_edge_height + r_diff, r = outer_r);
+      cylinder(h = layer_h, r = net_upper_r);
+      cylinder(h = leaf_outer_edge_height + r_diff, r = lower_r);
     }
 
     // Carve the swoopy bit
     color(color_leafs, alpha=0.4) {
       translate([0, 0, leaf_outer_edge_height + r_diff]) {
-        donut(r1 = outer_r + r_diff, r2 = r_diff);
+        donut(r1 = lower_r + r_diff, r2 = r_diff);
       }
     }
 
     // Carve the vertical trunk cavity
     color(color_leafs, alpha=0.4) {
       translate([0, 0, -slop]) {
-        cylinder(h = layer_h + 2 * slop, r = trunk_r);
+        cylinder(h = layer_h + 2 * slop, r = lower_trunk_r + slop);
+        // cylinder(h = layer_h + 2 * slop, r = lower_r - r_diff - minimum_wall_thickness);
       }
     }
 
     // Carve the horizontal cable raceway
     color(color_raceway, alpha=0.4) {
-      cable_raceway(outer_r);
+      cable_raceway(lower_r);
     }
   }
 }
@@ -224,47 +234,83 @@ module leaf_at(layer_index) {
 // ===== TRUNK RINGS ===== //
 
 module trunk_at(layer_index) {
-  overlap = 1.4;
-  layer_h = leaf_layer_height(layer_index);
-  outer_r = ring_radii[layer_index];
-  inner_r = ring_radii[layer_index + 1];
-  echo("trunk. inner_r: ", inner_r, ", outer_r: ", outer_r, "layer_h: ", layer_h);
-
-  net_outer_r = max(1.2 + minimum_trunk_radius, outer_r - ring_width - ring_inner_offset);
-  net_inner_r = max(1.2 + minimum_trunk_radius, inner_r - ring_width - ring_inner_offset);
-  r_diff = net_outer_r - net_inner_r;
-  trunk_r = net_inner_r / 2;
-  echo("trunk. net_outer_r: ", net_outer_r, ", net_inner_r: ", net_inner_r, ", r_diff: ", r_diff);
+  layer_h = calc_layer_h_at(layer_index);
+  lower_r = calc_outer_r_at(layer_index);
+  upper_r = calc_outer_r_at(layer_index + 1);
+  net_upper_r = calc_net_upper_r_at(layer_index);
+  r_diff = calc_r_diff_at(layer_index);
+  lower_trunk_r = calc_net_inner_r_at(layer_index);
+  upper_trunk_r = calc_net_inner_r_at(layer_index + 1);
 
   difference() 
   {
     color(color_trunk) {
-      cylinder(h = layer_h, r1 = trunk_r, r2 = trunk_r - 0.8);
+      cylinder(h = layer_h, r1 = lower_trunk_r, r2 = lower_trunk_r - nozzle_diameter);
     }
 
     // Carve the vertical trunk cavity
     color(color_trunk, alpha=0.4)
     translate([0, 0, -slop]) {
-      cylinder(h = layer_h + 2 * slop, r1 = trunk_r - overlap, r2 = (inner_r - overlap) / 4);
+      cylinder(h = layer_h + 2 * slop, r1 = lower_trunk_r - trunk_layer_overlap - nozzle_diameter, r2 = upper_trunk_r - trunk_layer_overlap - nozzle_diameter);
     }
 
     // Carve the horizontal cable raceway
-    cable_raceway(net_outer_r);
+    cable_raceway(lower_r); // net_lower_r);
     translate([0, 0, layer_h])
       rotate(a=[0,180,0])
-        cable_raceway(net_outer_r);
+        cable_raceway(lower_r); // net_lower_r);
+
+    // Carve a vertical cable raceway
+    color(color_raceway, alpha=0.4)
+    translate([-cable_raceway_width / 2, -slop, -slop]) {
+      cube([cable_raceway_width, lower_trunk_r, layer_h + 2 * slop]);
+    }
+
   }
 }
 
 // ===== UTILITIES ===== //
 
-function leaf_layer_height(layer_index) =
-  leaf_outer_edge_height + ring_radii[layer_index] - max(minimum_trunk_radius, ring_radii[layer_index + 1] - ring_width - ring_inner_offset) + ring_height;
+/*
+        (B)__  (H)
+          |   |
+          |   |
+         /    |
+       /      |
+    _/        |
+   |__________|
+  (A)        (C)
 
-function leaf_layer_height_delme(outer_r, inner_r) =
-  leaf_outer_edge_height + outer_r - max(minimum_trunk_radius, inner_r - ring_width - ring_inner_offset) + ring_height;
+ (0) -> ring_radii[layer_index]
+ (2) -> 
 
-module cable_raceway(outer_r)
+*/
+
+function next_layer_index_at(layer_index) =
+  min(layer_index + 1, len(ring_radii) - 1);
+
+// (H)
+function calc_layer_h_at(layer_index) =
+  leaf_outer_edge_height + ring_radii[layer_index] - max(minimum_trunk_radius, ring_radii[next_layer_index_at(layer_index)] - ring_width - ring_inner_offset) + ring_height;
+
+// (A)
+function calc_outer_r_at(layer_index) =
+  ring_radii[layer_index] + minimum_wall_thickness;
+
+// (B) //  max(minimum_wall_thickness + minimum_trunk_radius, upper_r - ring_width - ring_inner_offset);
+function calc_net_upper_r_at(layer_index) =
+  // max(minimum_wall_thickness + minimum_trunk_radius, calc_layer_h_at(layer_index + 1) - ring_width - ring_inner_offset);
+  max(minimum_wall_thickness + minimum_trunk_radius, ring_radii[next_layer_index_at(layer_index)] - ring_width - ring_inner_offset);
+
+// (C) // lower_r - r_diff - minimum_wall_thickness
+function calc_net_inner_r_at(layer_index) =
+  max(minimum_trunk_radius, calc_outer_r_at(layer_index) - calc_layer_h_at(layer_index) + minimum_wall_thickness);
+
+// (A) - (B)
+function calc_r_diff_at(layer_index) =
+  calc_outer_r_at(layer_index) - calc_net_upper_r_at(layer_index);
+
+module cable_raceway(lower_r)
   color(color_raceway, alpha=0.4)
     rotate(a=[0, 0, 90])
       translate([0, 0, -slop])
@@ -273,11 +319,11 @@ module cable_raceway(outer_r)
             translate([0, 0, cable_raceway_height / 2])
               rotate(a=[0, 90, 0]) 
                 scale([cable_raceway_height, cable_raceway_width])
-                  cylinder(outer_r - 1 + 2 * slop, d = 1);
+                  cylinder(lower_r + 2 * slop, d = 1);
             translate([0, -cable_raceway_width / 2, 0])
-              cube([outer_r - 1, cable_raceway_width, cable_raceway_height / 2]);
+              cube([lower_r, cable_raceway_width, cable_raceway_height / 2]);
           }
-          cylinder(h = cable_raceway_height * 2, r = outer_r - 1.2);
+          cylinder(h = cable_raceway_height * 2, r = lower_r - minimum_wall_thickness);
         }
 
 // ===== GENERIC UTILITIES ===== //
