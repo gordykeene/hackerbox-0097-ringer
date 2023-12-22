@@ -24,11 +24,11 @@ You can drive them however you want. I have had great experiances driving eight 
 
 // ===== PARAMETERS ===== //
 
-render_options = ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver"];
+render_options = ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver", "Leaf rings only"];
 
 /* [Viewing Options] */
 // Select view to render
-view = "Leafs (for print)"; // ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver"]
+view = "Leafs (for print)"; // ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver", "Leaf rings only"]
 
 /* [LED Ring Measurements] */
 // Width of the LED ring, x/y-plane (outer-inner diameter)
@@ -89,6 +89,7 @@ module main() {
   if (render_options[2] == view) leafs_stacked();
   if (render_options[3] == view) leafs_and_trunk_quartered();
   if (render_options[4] == view) leafs_and_trunk_sliver();
+  if (render_options[5] == view) leafs_rings_only();
 }
 
 module leafs_for_print() {
@@ -186,6 +187,17 @@ module leafs_and_trunk_sliver() {
       trunk_for_print();
       leafs_stacked();
     }
+  }
+}
+
+module leafs_rings_only() {
+  k = 200; // Some value larger than the objects in most dimensions
+  intersection()
+  {
+    color("gray", alpha=0.05)
+      translate([-k, -k, -slop])
+        cube([2 * k, 2 * k, 2 * minimum_wall_thickness]);
+    leafs_for_print();
   }
 }
 
