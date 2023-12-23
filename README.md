@@ -31,15 +31,18 @@ There are several views available in the Customizer:
 The easiest way to get the may very well be to order [HackerBox #0095](https://hackerboxes.com/collections/past-hackerboxes/products/hackerbox-0097-ringer). But, at some point, that may not be available. The BOM is included here for reference.
 
 * Set of five addressable RGB LED concentric ring boards (128 pixels). 
-  * See the table below for details about the set included in the HackerBox kit. If you use a different set, you may need to manually update the `ring_radii[]` array in `pine-tree.scad`.
+  * [AliExpress](https://www.aliexpress.us/item/3256803493397431.html)
+  * If you want to search elsewhere, see the table below for details about the set included in the HackerBox kit. If you use a different set, you may need to manually update the `ring_radii[]` array in `pine-tree.scad`.
 * You may want to add one addressable LED at the top.
-  * [Adafruit](https://www.adafruit.com/product/1655) or [AdaFruit](https://www.adafruit.com/product/2424)
+  * [Adafruit](https://www.adafruit.com/product/1655) or [Adafruit](https://www.adafruit.com/product/2424)
   * Personally, I cut one off an unused WS2812B strip [Amazon](https://www.amazon.com/LOAMLIN-WS2812B-Individually-Addressable-Waterproof/dp/B0956C7KFR).
 * An ESP32 Wi-Fi development board suitable for [WLED](https://kno.wled.ge/).
 * Hookup wire
 * ProTapes UGlu Dash Sheets to attach the LED rings under the leaves. This adhesive is not included in the HackerBox kit, so source it separately.
   * [Amazon](https://www.amazon.com/ProTapes-306UGLU600-UGlu-Dash-Sheets/dp/B06XCCRPRY)
-  * [AdaFruit](https://www.adafruit.com/product/2424)
+  * [Adafruit](https://www.adafruit.com/product/2424)
+
+#### LED Rings
 
 | Ring | LEDs | Diameter | Radius  |
 |------|------|----------|---------|
