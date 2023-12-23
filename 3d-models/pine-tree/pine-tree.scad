@@ -221,7 +221,7 @@ module leaf_at(layer_index) {
 
     // Carve the horizontal cable raceway
     color(color_raceway, alpha = 0.4) {
-      cable_raceway(lower_r);
+      cable_raceway(lower_r, isBase = 0 == layer_index);
     }
   }
 }
@@ -253,10 +253,10 @@ module trunk_at(layer_index) {
     }
 
     // Carve the horizontal cable raceway
-    cable_raceway(lower_r); // net_lower_r);
+    cable_raceway(lower_r);
     translate([0, 0, layer_h])
       rotate(a=[0,180,0])
-        cable_raceway(lower_r); // net_lower_r);
+        cable_raceway(lower_r);
 
     // Carve a vertical cable raceway
     color(color_raceway, alpha = 0.4)
@@ -319,7 +319,7 @@ function calc_net_inner_r_at(layer_index) =
 function calc_r_diff_at(layer_index) =
   calc_outer_r_at(layer_index) - calc_net_upper_r_at(layer_index);
 
-module cable_raceway(lower_r)
+module cable_raceway(lower_r, isBase = false)
   color(color_raceway, alpha = 0.4)
     rotate(a=[0, 0, 90])
       translate([0, 0, -slop])
@@ -332,7 +332,8 @@ module cable_raceway(lower_r)
             translate([0, -cable_raceway_width / 2, 0])
               cube([lower_r, cable_raceway_width, cable_raceway_height / 2]);
           }
-          cylinder(h = cable_raceway_height * 2, r = lower_r - minimum_wall_thickness);
+          // The base of the tree doesn't have a wall at the end of the raceway
+          cylinder(h = cable_raceway_height * 2, r = isBase ? lower_r + slop : lower_r - minimum_wall_thickness);
         }
 
 // ===== GENERIC UTILITIES ===== //
