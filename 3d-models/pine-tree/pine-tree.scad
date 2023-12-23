@@ -24,11 +24,11 @@ You can drive them however you want. I have had great experiances driving eight 
 
 // ===== PARAMETERS ===== //
 
-render_options = ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver", "Leaf rings only"];
+render_options = ["Leaves (for print)", "Trunk (for print)", "Leaves stacked", "Leaves and trunk quartered", "Leaves and trunk sliver", "Leaf rings only"];
 
 /* [Viewing Options] */
 // Select view to render
-view = "Leafs (for print)"; // ["Leafs (for print)", "Trunk (for print)", "Leafs stacked", "Leafs and trunk quartered", "Leafs and trunk sliver", "Leaf rings only"]
+view = "Leaves (for print)"; // ["Leaves (for print)", "Trunk (for print)", "Leaves stacked", "Leaves and trunk quartered", "Leaves and trunk sliver", "Leaf rings only"]
 
 /* [LED Ring Measurements] */
 // Width of the LED ring, x/y-plane (outer-inner diameter)
@@ -48,14 +48,14 @@ cable_raceway_radius = 3;
 
 /* [Pine Tree Settings] */
 // Minimum radius of the trunk
-minimum_trunk_radius = 2;
+minimum_trunk_radius = 3;
 // Minimum wall thickness
 minimum_wall_thickness = 1.2;
 // Overlap between each trunk layer
 trunk_layer_overlap = 1.6;
 
 /* [Tweaks and adjustments] */
-$fa = 8.0;
+$fa = 4.5;
 $fs = 0.25;
 // Added to objects when used as a void
 slop = 0.01;
@@ -75,7 +75,7 @@ ring_radii = [60, 60, 48, 36, 24, 13.5, minimum_trunk_radius];
 leaf_outer_edge_height = cable_raceway_height + nozzle_diameter;
 
 // Colors
-color_leafs = "Green";
+color_leaves = "Green";
 color_trunk = "#362312";
 color_raceway = "FireBrick";
 
@@ -84,19 +84,19 @@ color_raceway = "FireBrick";
 main();
 
 module main() {
-  if (render_options[0] == view) leafs_for_print();
+  if (render_options[0] == view) leaves_for_print();
   if (render_options[1] == view) trunk_for_print();
-  if (render_options[2] == view) leafs_stacked();
-  if (render_options[3] == view) leafs_and_trunk_quartered();
-  if (render_options[4] == view) leafs_and_trunk_sliver();
-  if (render_options[5] == view) leafs_rings_only();
+  if (render_options[2] == view) leaves_stacked();
+  if (render_options[3] == view) leaves_and_trunk_quartered();
+  if (render_options[4] == view) leaves_and_trunk_sliver();
+  if (render_options[5] == view) leaves_rings_only();
 }
 
-module leafs_for_print() {
+module leaves_for_print() {
   spacer = 3;
   center_r = ring_radii[0] + spacer;
 
-  leaf_at(1);
+  leaf_at(0);
 
   rotate(a=[0,0,0]) 
     translate([center_r + ring_radii[1], 0, 0])
@@ -129,19 +129,17 @@ module trunk_for_print() {
         trunk_at(3);
         translate([0, 0, calc_layer_h_at(3)]) {
           trunk_at(4);
-          /*
-          Printing the top layer never works out well, guess I'll just glue it on
+          // Printing the top layer never works out well, guess I'll just glue it on
           translate([0, 0, calc_layer_h_at(4)]) {
             trunk_at(5);
           }
-          */
         }
       }
     }
   }
 }
 
-module leafs_stacked() {
+module leaves_stacked() {
   leaf_at(0);
   translate([0, 0, calc_layer_h_at(0)]) {
     leaf_at(1);
@@ -160,13 +158,13 @@ module leafs_stacked() {
   }
 }
 
-module leafs_and_trunk_quartered() {
+module leaves_and_trunk_quartered() {
   k = 100; // Some value larger than the objects in most dimensions
   intersection() {
     color("gray", alpha=0.05)
       translate([-k, -k, -slop]) 
         cube([k + 1, k + 1, 2 * k]);
-    leafs_stacked();
+    leaves_stacked();
   }
   intersection() {
     color("gray", alpha=0.05)
@@ -176,7 +174,7 @@ module leafs_and_trunk_quartered() {
   }
 }
 
-module leafs_and_trunk_sliver() {
+module leaves_and_trunk_sliver() {
   k = 100; // Some value larger than the objects in most dimensions
   intersection()
   {
@@ -185,19 +183,19 @@ module leafs_and_trunk_sliver() {
         cube([2, 2 * k, 2 * k]);
     union() {
       trunk_for_print();
-      leafs_stacked();
+      leaves_stacked();
     }
   }
 }
 
-module leafs_rings_only() {
+module leaves_rings_only() {
   k = 200; // Some value larger than the objects in most dimensions
   intersection()
   {
     color("gray", alpha=0.05)
       translate([-k, -k, -slop])
         cube([2 * k, 2 * k, 2 * minimum_wall_thickness]);
-    leafs_for_print();
+    leaves_for_print();
   }
 }
 
@@ -216,23 +214,22 @@ module leaf_at(layer_index) {
 
   difference() 
   {
-    color(color_leafs) union() {
+    color(color_leaves) union() {
       cylinder(h = layer_h, r = net_upper_r);
       cylinder(h = leaf_outer_edge_height + r_diff, r = lower_r);
     }
 
     // Carve the swoopy bit
-    color(color_leafs, alpha=0.4) {
+    color(color_leaves, alpha=0.6) {
       translate([0, 0, leaf_outer_edge_height + r_diff]) {
         donut(r1 = lower_r + r_diff, r2 = r_diff);
       }
     }
 
     // Carve the vertical trunk cavity
-    color(color_leafs, alpha=0.4) {
+    color(color_leaves, alpha=0.4) {
       translate([0, 0, -slop]) {
         cylinder(h = layer_h + 2 * slop, r = lower_trunk_r + slop);
-        // cylinder(h = layer_h + 2 * slop, r = lower_r - r_diff - minimum_wall_thickness);
       }
     }
 
@@ -254,10 +251,13 @@ module trunk_at(layer_index) {
   lower_trunk_r = calc_net_inner_r_at(layer_index);
   upper_trunk_r = calc_net_inner_r_at(layer_index + 1);
 
+  r1 = max(minimum_trunk_radius, lower_trunk_r - nozzle_diameter / 2);
+  r2 = max(minimum_trunk_radius, lower_trunk_r - nozzle_diameter);
+
   difference() 
   {
     color(color_trunk) {
-      cylinder(h = layer_h, r1 = lower_trunk_r, r2 = lower_trunk_r - nozzle_diameter);
+      cylinder(h = layer_h, r1 = lower_trunk_r - nozzle_diameter / 2, r2 = lower_trunk_r - nozzle_diameter);
     }
 
     // Carve the vertical trunk cavity
@@ -293,9 +293,6 @@ module trunk_at(layer_index) {
    |__________|
   (A)        (C)
 
- (0) -> ring_radii[layer_index]
- (2) -> 
-
 */
 
 function next_layer_index_at(layer_index) =
@@ -309,12 +306,11 @@ function calc_layer_h_at(layer_index) =
 function calc_outer_r_at(layer_index) =
   ring_radii[layer_index] + minimum_wall_thickness;
 
-// (B) //  max(minimum_wall_thickness + minimum_trunk_radius, upper_r - ring_width - ring_inner_offset);
+// (B)
 function calc_net_upper_r_at(layer_index) =
-  // max(minimum_wall_thickness + minimum_trunk_radius, calc_layer_h_at(layer_index + 1) - ring_width - ring_inner_offset);
   max(minimum_wall_thickness + minimum_trunk_radius, ring_radii[next_layer_index_at(layer_index)] - ring_width - ring_inner_offset);
 
-// (C) // lower_r - r_diff - minimum_wall_thickness
+// (C)
 function calc_net_inner_r_at(layer_index) =
   max(minimum_trunk_radius, calc_outer_r_at(layer_index) - calc_layer_h_at(layer_index) + minimum_wall_thickness);
 
