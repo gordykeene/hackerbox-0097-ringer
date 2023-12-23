@@ -4,6 +4,8 @@ HackerBox #0095 can be [purchased here](https://hackerboxes.com/collections/past
 
 This repo provides a 3D model of a Pine Tree that can be used to support the LED rings from the HackerBox kit.
 
+![Pine Tree viewable in OpenSCAD](images/ping-tree-openscad.png)
+
 ## Setup
 
 Pre-requisites:
