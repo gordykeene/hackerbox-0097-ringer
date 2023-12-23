@@ -58,7 +58,7 @@ $fa = 4.5;
 $fs = 0.25;
 // Added to objects when used as a void
 slop = 0.01;
-// Nozzle diameter
+// Used to adjust gaps between objects
 nozzle_diameter = 0.4;
 
 /* [Hidden] */
