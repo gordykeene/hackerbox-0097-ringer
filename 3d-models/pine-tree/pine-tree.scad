@@ -381,3 +381,6 @@ function law_of_cosines_for_radii(a, b, c) =
 
 function law_of_cosines(a, b, c) =
   acos((a^2 + b^2 - c^2) / (2 * a * b));
+
+// EOF
+
