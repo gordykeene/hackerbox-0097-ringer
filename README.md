@@ -67,3 +67,9 @@ The following instructions are specific to the Pine Tree. HackerBox provides [in
   * Alternatively, before doing more assembly, solder four wires to each ring (Gnd, 5V, Data In, Data Out), leaving them long enough to be connected inside the trunk later.
 1. Cut the UGlu Dash Sheets into smaller pieces, perhaps 4mm square. Using about three pieces per ring, center and attach the LED rings to the flat side of the leaves. Be sure to align the cable in the raceways.
 1. Slide the leaves onto the trunk. The leaves should be snug but not so tight that they can't be removed. The leaves should be oriented so the raceways align with the raceway in the trunk.
+
+## Other copies on the Web
+
+This project has been copied to the following site(s). These copies may not be up-to-date.
+
+* [Thingiverse thing:6397229](https://www.thingiverse.com/thing:6397229)
